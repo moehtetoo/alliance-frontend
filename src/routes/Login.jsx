@@ -25,8 +25,8 @@ const Login = () => {
     return (
         <section className="h-screen">
         <div className="h-full px-6 py-24">
-            <div className="g-6 flex h-full flex-wrap items-center justify-center">
-            {unauthorized && 
+            <div className="flex justify-center">
+            <div className="w-1/3">{unauthorized && 
             <Alert 
                 color="red" 
                 variant="outlined" 
@@ -34,7 +34,9 @@ const Login = () => {
                 className="mb-3"
             >
                 Invalid username or password
-            </Alert>}
+            </Alert>}</div>
+            </div>
+            <div className="g-6 flex h-full flex-wrap items-center justify-center">
             <Card className="mt-6 w-96">
                 <CardBody>
                     <Formik
