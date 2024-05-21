@@ -1,8 +1,23 @@
 import { Button, Dialog, DialogBody, DialogFooter, DialogHeader } from "@material-tailwind/react"
 import PropTypes from 'prop-types';
+import { deleteProject } from "../../api/projectApi";
+import toast from "react-hot-toast";
+import { useToggle } from "react-use";
 
-const DeleteDialog = ({open, handleOpen, projectName}) => {
-
+const DeleteDialog = ({open, handleOpen, projectName, projectId, onDelete}) => {
+    const [loading, toggleLoading] = useToggle(false);
+    const handleDelete = () => {
+        toggleLoading();
+        const promise = deleteProject(projectId);
+        toast.promise(promise, {
+            loading: 'Loading...',
+            success: 'Project Updated Successfully',
+            error: 'Error while updating the Project'
+        })
+        promise
+            .then(() => onDelete())
+            .finally(() => (handleOpen(null), toggleLoading()))
+    }
 
     return (
         <Dialog
@@ -24,7 +39,8 @@ const DeleteDialog = ({open, handleOpen, projectName}) => {
             </Button>
             <Button
                 color="red"
-                onClick={() => handleOpen(null)}
+                onClick={handleDelete}
+                loading={loading}
             >
                 <span>Delete</span>
             </Button>
@@ -36,7 +52,9 @@ const DeleteDialog = ({open, handleOpen, projectName}) => {
 DeleteDialog.propTypes = {
     open: PropTypes.bool.isRequired,
     handleOpen: PropTypes.func.isRequired,
-    projectName: PropTypes.string.isRequired
+    projectName: PropTypes.string.isRequired,
+    projectId: PropTypes.number.isRequired,
+    onDelete: PropTypes.func.isRequired
   }
 
 export default DeleteDialog

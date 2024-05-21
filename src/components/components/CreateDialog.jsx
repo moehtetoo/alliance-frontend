@@ -5,7 +5,7 @@ import { object, string, date } from "yup";
 import { createProject } from "../../api/projectApi";
 import toast from "react-hot-toast";
 
-const CreateDialog = ({open, handleOpen}) => {
+const CreateDialog = ({open, handleOpen, onCreate}) => {
 
     const onSave = (values, setSubmitting, resetForm) => {
         console.log(values);
@@ -15,7 +15,7 @@ const CreateDialog = ({open, handleOpen}) => {
             success: 'Project Created Successfully',
             error: 'Error while creating the Project'
         })
-        createPromise.finally(() => {
+        createPromise.then(() => onCreate()).finally(() => {
             handleOpen(null);
             setSubmitting(false);
             resetForm();
@@ -147,7 +147,8 @@ const CreateDialog = ({open, handleOpen}) => {
 
 CreateDialog.propTypes = {
     open: PropTypes.bool.isRequired,
-    handleOpen: PropTypes.func.isRequired
+    handleOpen: PropTypes.func.isRequired,
+    onCreate: PropTypes.func.isRequired
   }
 
 export default CreateDialog

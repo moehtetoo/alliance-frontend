@@ -1,30 +1,52 @@
 import { Button, Card, CardBody, CardFooter, CardHeader, Typography } from "@material-tailwind/react";
-import { useToggle } from "react-use";
+import { useEffectOnce, useToggle } from "react-use";
 import CreateDialog from "../components/CreateDialog";
 import UpdateDialog from "../components/UpdateDialog";
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import { fetchProjects } from "../../api/projectApi";
+import toast from "react-hot-toast";
+import { formatDate, toDate } from "../../utils/dateUtils";
+import DeleteDialog from "../components/DeleteDialog";
 
 const Projects = () => {
     const [openCreateDialog, toggleCreateDialog] = useToggle(false);
     const [openUpdateDialog, toggleUpdateDialog] = useToggle(false);
-    const [isDestory, setIsDestory] = useState(false);
+    const [openDeleteDialog, toggleDeleteDialog] = useToggle(false);
     const [projects, setProjects] = useState([]);
     const [page, setPage] = useState(1);
     const [total, setTotal] = useState(0);
+    const [offset, setOffset] = useState(1);
+    const [projectForUpdate, setProjectForUpdate] = useState({
+        id: 0, 
+        name: "", 
+        description: "", 
+        startDate: "", 
+        endDate: ""
+    });
+
+    const disableNextBtn = useMemo(() => projects.length + offset === total, [offset, projects.length, total])
+
     const TABLE_HEAD = ["Name", "Description", "Start Date", "End Date", ""];
-    useEffect(() => {
-      fetchProjects(1).then((res) => {
-        if(!isDestory) {
+
+    const fetch = (page) => {
+        fetchProjects(page).then((res) => {
             setProjects(res.list);
             setTotal(res.meta.total);
-        }
-      })
-    
-      return () => {
-        setIsDestory(true)
-      }
-    })
+            setOffset(res.meta.offset);
+          }).catch(() => {
+            toast.error('Failed to fetch projects.');
+          })
+    };
+
+    const refresh = () => {
+        fetch(1);
+        setPage(1);
+    }
+
+    useEffectOnce(() => {
+      fetch(page);
+      
+    });
     
   return (
     <>
@@ -59,12 +81,12 @@ const Projects = () => {
                     </tr>
                     </thead>
                     <tbody>
-                    {projects.map(({ name, description, startDate, endDate }, index) => {
+                    {projects.map(({ id, name, description, startDate, endDate }, index) => {
                         const isLast = index === projects.length - 1;
                         const classes = isLast ? "p-4" : "p-4 border-b border-blue-gray-50";
             
                         return (
-                        <tr key={name}>
+                        <tr key={id}>
                             <td className={classes}>
                             <Typography
                                 variant="small"
@@ -98,20 +120,26 @@ const Projects = () => {
                                 color="blue-gray"
                                 className="font-normal"
                             >
-                                {endDate}
+                                {endDate ?? '-'}
                             </Typography>
                             </td>
                             <td className={classes}>
                                 <Button
                                     variant="text"
                                     color="red"
-                                    onClick={() => console.log('delete')}
+                                    onClick={() => {
+                                        setProjectForUpdate({ id, name, description, startDate: formatDate(toDate(startDate)), endDate: endDate ? formatDate(toDate(endDate)) : "" });
+                                        toggleDeleteDialog();
+                                    }}
                                     className="mr-1"
                                     size="sm"
                                 >
                                     <span>Delete</span>
                                 </Button>
-                                <Button variant="text" size="sm" onClick={toggleUpdateDialog}>Edit</Button>
+                                <Button variant="text" size="sm" onClick={() => {
+                                    setProjectForUpdate({ id, name, description, startDate: formatDate(toDate(startDate)), endDate: endDate ? formatDate(toDate(endDate)) : "" });
+                                    toggleUpdateDialog();
+                                }}>Edit</Button>
                             </td>
                         </tr>
                         );
@@ -121,30 +149,56 @@ const Projects = () => {
             </CardBody>
             <CardFooter className="flex items-center justify-between border-t border-blue-gray-50 p-4">
                 <Typography variant="small" color="blue-gray" className="font-normal">
-                Page {page} of {total}
+                Page {offset + projects.length} of {total}
                 </Typography>
                 <div className="flex gap-2">
                 <Button 
                     variant="outlined" 
                     size="sm" 
                     disabled={page === 1} 
-                    onClick={() => setPage((p) => p - 5)}
+                    onClick={() => setPage((p) => {
+                        const prevPage = --p;
+                        fetch(prevPage);
+                        return prevPage;
+                    })}
                 >
                     Previous
                 </Button>
                 <Button 
                     variant="outlined" 
                     size="sm" 
-                    disabled={page + 5 > total} 
-                    onClick={() => setPage((p) => p + 5)}
+                    disabled={disableNextBtn} 
+                    onClick={() => {
+                        setPage((p) => {
+                            const nextPage = ++p;
+                            fetch(nextPage)
+                            return nextPage;
+                        });
+                    }}
                 >
                     Next
                 </Button>
                 </div>
             </CardFooter>
         </Card>
-        <CreateDialog open={openCreateDialog} handleOpen={toggleCreateDialog}/>
-        <UpdateDialog open={openUpdateDialog} handleOpen={toggleUpdateDialog}/>
+        <CreateDialog 
+            open={openCreateDialog} 
+            handleOpen={toggleCreateDialog} 
+            onCreate={refresh}
+        />
+        <UpdateDialog 
+            open={openUpdateDialog} 
+            handleOpen={toggleUpdateDialog} 
+            onUpdate={refresh} 
+            project={projectForUpdate}
+        />
+        <DeleteDialog 
+            open={openDeleteDialog}     
+            handleOpen={toggleDeleteDialog} 
+            onDelete={refresh} 
+            projectName={projectForUpdate.name} 
+            projectId={projectForUpdate.id}
+        />
     </>
   )
 }
