@@ -2,7 +2,7 @@ import { Button, Dialog, DialogBody, DialogFooter, DialogHeader, Input, Textarea
 import { Formik } from "formik";
 import PropTypes from 'prop-types';
 import { object, string, date } from "yup";
-import { createProject } from "../../api/projectApi";
+import { createProject } from "../api/projectApi";
 import toast from "react-hot-toast";
 
 const CreateDialog = ({open, handleOpen, onCreate}) => {

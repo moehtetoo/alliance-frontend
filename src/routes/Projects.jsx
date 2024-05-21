@@ -3,9 +3,9 @@ import { useEffectOnce, useToggle } from "react-use";
 import CreateDialog from "../components/CreateDialog";
 import UpdateDialog from "../components/UpdateDialog";
 import { useMemo, useState } from "react";
-import { fetchProjects } from "../../api/projectApi";
+import { fetchProjects } from "../api/projectApi";
 import toast from "react-hot-toast";
-import { formatDate, toDate } from "../../utils/dateUtils";
+import { formatDate, toDate } from "../utils/dateUtils";
 import DeleteDialog from "../components/DeleteDialog";
 
 const Projects = () => {

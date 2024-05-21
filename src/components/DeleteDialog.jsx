@@ -1,6 +1,6 @@
 import { Button, Dialog, DialogBody, DialogFooter, DialogHeader } from "@material-tailwind/react"
 import PropTypes from 'prop-types';
-import { deleteProject } from "../../api/projectApi";
+import { deleteProject } from "../api/projectApi";
 import toast from "react-hot-toast";
 import { useToggle } from "react-use";
 
