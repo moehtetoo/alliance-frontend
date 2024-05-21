@@ -4,8 +4,10 @@ import PropTypes from 'prop-types';
 import { object, string, date } from "yup";
 import { updateProject } from "../api/projectApi";
 import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
 const UpdateDialog = ({open, handleOpen, onUpdate, project}) => {
+    const navigate = useNavigate();
     const onSave = (values, setSubmitting, resetForm) => {
         const promise = updateProject(values.id, values);
         toast.promise(promise, {
@@ -15,6 +17,11 @@ const UpdateDialog = ({open, handleOpen, onUpdate, project}) => {
         })
         promise
             .then(() => onUpdate())
+            .catch((err) => {
+                if(err.response.status === 401) {
+                    navigate('/login')
+                }
+            })
             .finally(() => (handleOpen(null),setSubmitting(false),resetForm()))
     }
 
@@ -73,7 +80,7 @@ const UpdateDialog = ({open, handleOpen, onUpdate, project}) => {
                             <DialogBody>
                                 <div className="mb-6">
                                     <Input 
-                                        label="Name" 
+                                        label="Name *" 
                                         name="name" 
                                         value={values.name}
                                         onChange={handleChange}
@@ -84,7 +91,7 @@ const UpdateDialog = ({open, handleOpen, onUpdate, project}) => {
                                 </div>
                                 <div className="mb-6">
                                     <Textarea 
-                                        label="Description" 
+                                        label="Description *" 
                                         name="description"
                                         value={values.description}
                                         onChange={handleChange}
@@ -95,7 +102,7 @@ const UpdateDialog = ({open, handleOpen, onUpdate, project}) => {
                                 </div>
                                 <div className="mb-6">
                                     <Input 
-                                        label="Start Date"  
+                                        label="Start Date *"  
                                         type="date" 
                                         name="startDate"
                                         value={values.startDate}

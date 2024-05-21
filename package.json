@@ -1,8 +1,9 @@
 {
   "name": "alliance-frontend",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
+  "author": "Moe Htet Oo",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

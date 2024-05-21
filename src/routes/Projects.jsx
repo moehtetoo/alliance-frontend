@@ -1,4 +1,4 @@
-import { Button, Card, CardBody, CardFooter, CardHeader, Typography } from "@material-tailwind/react";
+import { Button, Card, CardBody, CardFooter, CardHeader, Spinner, Typography } from "@material-tailwind/react";
 import { useEffectOnce, useToggle } from "react-use";
 import CreateDialog from "../components/CreateDialog";
 import UpdateDialog from "../components/UpdateDialog";
@@ -7,8 +7,10 @@ import { fetchProjects } from "../api/projectApi";
 import toast from "react-hot-toast";
 import { formatDate, toDate } from "../utils/dateUtils";
 import DeleteDialog from "../components/DeleteDialog";
+import { useNavigate } from "react-router-dom";
 
 const Projects = () => {
+    const navigate = useNavigate();
     const [openCreateDialog, toggleCreateDialog] = useToggle(false);
     const [openUpdateDialog, toggleUpdateDialog] = useToggle(false);
     const [openDeleteDialog, toggleDeleteDialog] = useToggle(false);
@@ -16,6 +18,7 @@ const Projects = () => {
     const [page, setPage] = useState(1);
     const [total, setTotal] = useState(0);
     const [offset, setOffset] = useState(1);
+    const [startFetching, toggleFetching] = useToggle(false);
     const [projectForUpdate, setProjectForUpdate] = useState({
         id: 0, 
         name: "", 
@@ -28,14 +31,26 @@ const Projects = () => {
 
     const TABLE_HEAD = ["Name", "Description", "Start Date", "End Date", ""];
 
+    const onLogout = () => {
+        localStorage.removeItem('token');
+        navigate('/login');
+    }
+
     const fetch = (page) => {
+        if(startFetching) return;
+        toggleFetching();
         fetchProjects(page).then((res) => {
             setProjects(res.list);
             setTotal(res.meta.total);
             setOffset(res.meta.offset);
-          }).catch(() => {
-            toast.error('Failed to fetch projects.');
-          })
+          }).catch((err) => {
+            if(err.response.status === 401) {
+                toast.error('Please Login First');
+                navigate('/login')
+            } else {
+                toast.error('Failed to fetch projects.');
+            }
+          }).finally(toggleFetching);
     };
 
     const refresh = () => {
@@ -45,13 +60,13 @@ const Projects = () => {
 
     useEffectOnce(() => {
       fetch(page);
-      
     });
     
   return (
-    <>
-        <div className="mb-6 text-center">
+    <div className="p-5">
+        <div className="flex mb-6 justify-between">
             <Typography variant="h2">Projects Management</Typography>
+            <Button variant="text" onClick={onLogout}>Logout</Button>
         </div>
         
         <Card className="h-full w-full">
@@ -81,6 +96,9 @@ const Projects = () => {
                     </tr>
                     </thead>
                     <tbody>
+                    {
+                        startFetching && <Spinner />
+                    }
                     {projects.map(({ id, name, description, startDate, endDate }, index) => {
                         const isLast = index === projects.length - 1;
                         const classes = isLast ? "p-4" : "p-4 border-b border-blue-gray-50";
@@ -199,7 +217,7 @@ const Projects = () => {
             projectName={projectForUpdate.name} 
             projectId={projectForUpdate.id}
         />
-    </>
+    </div>
   )
 }
 

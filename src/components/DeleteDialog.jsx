@@ -3,8 +3,10 @@ import PropTypes from 'prop-types';
 import { deleteProject } from "../api/projectApi";
 import toast from "react-hot-toast";
 import { useToggle } from "react-use";
+import { useNavigate } from "react-router-dom";
 
 const DeleteDialog = ({open, handleOpen, projectName, projectId, onDelete}) => {
+    const navigate = useNavigate();
     const [loading, toggleLoading] = useToggle(false);
     const handleDelete = () => {
         toggleLoading();
@@ -16,6 +18,11 @@ const DeleteDialog = ({open, handleOpen, projectName, projectId, onDelete}) => {
         })
         promise
             .then(() => onDelete())
+            .catch((err) => {
+                if(err.response.status === 401) {
+                    navigate('/login')
+                }
+            })
             .finally(() => (handleOpen(null), toggleLoading()))
     }
 

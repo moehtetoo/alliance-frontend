@@ -4,7 +4,9 @@ import axios from 'axios';
  * Request Success Handler
  */
 const requestSuccessHandler = config => {
-  return config;
+  const auth = localStorage.getItem('token');
+  const headers = config.headers;
+  return {...config, headers: {...headers, auth}};
 };
 
 /**
@@ -19,7 +21,6 @@ const requestErrorHandler = err => {
  */
 const responseSuccessHandler = res => {
   const response = res.data;
-
   if (200 <= res.status && res.status < 300) {
     return response.data;
   } else {

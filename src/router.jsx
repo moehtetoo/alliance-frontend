@@ -4,6 +4,7 @@ import {
 import Login from "./routes/Login";
 import ErrorPage from "./routes/ErrorPage";
 import Projects from "./routes/Projects";
+import SignUp from "./routes/Signup";
 
 export const router = createBrowserRouter([
   {
@@ -14,5 +15,9 @@ export const router = createBrowserRouter([
   {
     path: "/login",
     element: <Login/>
+  },
+  {
+    path: "/signup",
+    element: <SignUp/>
   }
 ]);
