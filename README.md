@@ -1,4 +1,8 @@
 # How To Run
 
-- yarn install
-- yarn dev
+```shell
+yarn install
+```
+```shell
+yarn dev
+```
