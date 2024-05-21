@@ -1,95 +1,147 @@
-import { Button, Dialog, DialogBody, DialogFooter, DialogHeader, Input, Popover, PopoverContent, PopoverHandler, Textarea } from "@material-tailwind/react"
-import { format } from "date-fns";
+import { Button, Dialog, DialogBody, DialogFooter, DialogHeader, Input, Textarea, Typography } from "@material-tailwind/react"
+import { Formik } from "formik";
 import PropTypes from 'prop-types';
-import { useState } from "react";
-import { DayPicker } from "react-day-picker";
-import { ChevronRightIcon, ChevronLeftIcon } from "@heroicons/react/24/outline";
+import { object, string, date } from "yup";
+import { createProject } from "../../api/projectApi";
+import toast from "react-hot-toast";
 
 const CreateDialog = ({open, handleOpen}) => {
 
-    const [date, setDate] = useState();
+    const onSave = (values, setSubmitting, resetForm) => {
+        console.log(values);
+        const createPromise = createProject(values);
+        toast.promise(createPromise, {
+            loading: 'Loading...',
+            success: 'Project Created Successfully',
+            error: 'Error while creating the Project'
+        })
+        createPromise.finally(() => {
+            handleOpen(null);
+            setSubmitting(false);
+            resetForm();
+        })
+    }
+
     return (
-        <Dialog
-            open={open}
-            size="sm"
-            handler={handleOpen}
-        >
-            <DialogHeader>Create Project</DialogHeader>
-            <DialogBody>
-                <div className="mb-6">
-                    <Input label="Name"  />
-                </div>
-                <div className="mb-6">
-                    <Textarea label="Description" />
-                </div>
-                <div className="mb-6">
-                    <Popover placement="bottom" >
-                        <PopoverHandler>
-                        <Input
-                            label="Select a Date"
-                            onChange={() => null}
-                            value={date ? format(date, "PPP") : ""}
-                        />
-                        </PopoverHandler>
-                        <PopoverContent style={{zIndex: 10000}}>
-                        <DayPicker
-                            mode="single"
-                            selected={date}
-                            onSelect={setDate}
-                            showOutsideDays
-                            className="border-0"
-                            classNames={{
-                            caption: "flex justify-center py-2 mb-4 relative items-center",
-                            caption_label: "text-sm font-medium text-gray-900",
-                            nav: "flex items-center",
-                            nav_button:
-                                "h-6 w-6 bg-transparent hover:bg-blue-gray-50 p-1 rounded-md transition-colors duration-300",
-                            nav_button_previous: "absolute left-1.5",
-                            nav_button_next: "absolute right-1.5",
-                            table: "w-full border-collapse",
-                            head_row: "flex font-medium text-gray-900",
-                            head_cell: "m-0.5 w-9 font-normal text-sm",
-                            row: "flex w-full mt-2",
-                            cell: "text-gray-600 rounded-md h-9 w-9 text-center text-sm p-0 m-0.5 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-gray-900/20 [&:has([aria-selected].day-outside)]:text-white [&:has([aria-selected])]:bg-gray-900/50 first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
-                            day: "h-9 w-9 p-0 font-normal",
-                            day_range_end: "day-range-end",
-                            day_selected:
-                                "rounded-md bg-gray-900 text-white hover:bg-gray-900 hover:text-white focus:bg-gray-900 focus:text-white",
-                            day_today: "rounded-md bg-gray-200 text-gray-900",
-                            day_outside:
-                                "day-outside text-gray-500 opacity-50 aria-selected:bg-gray-500 aria-selected:text-gray-900 aria-selected:bg-opacity-10",
-                            day_disabled: "text-gray-500 opacity-50",
-                            day_hidden: "invisible",
-                            }}
-                            components={{
-                            IconLeft: ({ ...props }) => (
-                                <ChevronLeftIcon {...props} className="h-4 w-4 stroke-2" />
-                            ),
-                            IconRight: ({ ...props }) => (
-                                <ChevronRightIcon {...props} className="h-4 w-4 stroke-2" />
-                            ),
-                            }}
-                        />
-                        </PopoverContent>
-                    </Popover>
-                </div>
-            </DialogBody>
-            <DialogFooter>
-            <Button
-                variant="text"
-                color="red"
-                onClick={() => handleOpen(null)}
-                className="mr-1"
+        <Formik
+            initialValues={{ name: "", description: "", startDate: "", endDate: "" }}
+            validationSchema={object({
+                name: string().max(50, "Name is too long").required("Required"),
+                description: string()
+                    .max(355, "Description is too long")
+                .required("Required"),
+                startDate: date().nullable()
+                .transform((curr, orig) => (orig === '' ? null : curr)).test(
+                    'validPeriod',
+                    'Please enter start date, end date order correctly.',
+                    function (value, context) {
+                    const endDateValue = (context.parent)['endDate'];
+                    if (!endDateValue || isNaN(endDateValue.getTime())) return true;
+                    if (!value) return true;
+                    return value.getTime() < endDateValue.getTime();
+                    },
+                ).required('Required'),
+                endDate: date().nullable()
+                .transform((curr, orig) => (orig === '' ? null : curr)).test(
+                    'validPeriod',
+                    'Please enter start date, end date order correctly',
+                    function (value, context) {
+                        const startDateValue = (context.parent)['startDate'];
+                        if (!startDateValue || isNaN(startDateValue.getTime())) return true;
+                        if (!value) return true;
+                        return startDateValue.getTime() < value.getTime();
+                    },
+                    )
+            })}
+            onSubmit={(values, {setSubmitting, resetForm}) => {
+                onSave(values, setSubmitting, resetForm);
+            }}
             >
-                <span>Cancel</span>
-            </Button>
-            <Button
-                onClick={() => handleOpen(null)}
-            >
-                <span>Confirm</span>
-            </Button>
-            </DialogFooter>
-        </Dialog>
+                {({
+                    values,
+                    errors,
+                    touched,
+                    isSubmitting,
+                    handleChange,
+                    handleBlur,
+                    handleSubmit,
+                    resetForm,
+                }) => (
+                        <Dialog
+                            open={open}
+                            size="sm"
+                            handler={handleOpen}
+                        >
+                            <DialogHeader>Create Project</DialogHeader>
+                            <DialogBody>
+                                <div className="mb-6">
+                                    <Input 
+                                        label="Name" 
+                                        name="name" 
+                                        value={values.name}
+                                        onChange={handleChange}
+                                        onBlur={handleBlur}
+                                        error={errors.name && touched.name}
+                                    />
+                                    {errors.name && <Typography variant="small" color="red">{errors.name}</Typography>}
+                                </div>
+                                <div className="mb-6">
+                                    <Textarea 
+                                        label="Description" 
+                                        name="description"
+                                        value={values.description}
+                                        onChange={handleChange}
+                                        onBlur={handleBlur}
+                                        error={errors.description && touched.description}
+                                    />
+                                    {errors.description && <Typography variant="small" color="red">{errors.description}</Typography>}
+                                </div>
+                                <div className="mb-6">
+                                    <Input 
+                                        label="Start Date"  
+                                        type="date" 
+                                        name="startDate"
+                                        value={values.startDate}
+                                        onChange={handleChange}
+                                        onBlur={handleBlur}
+                                        error={errors.startDate && touched.startDate}
+                                    />
+                                    {errors.startDate && <Typography variant="small" color="red">{errors.startDate}</Typography>}
+                                </div>
+                                <div className="mb-6">
+                                    <Input 
+                                        label="End Date"  
+                                        type="date" 
+                                        name="endDate"
+                                        value={values.endDate}
+                                        onChange={handleChange}
+                                        onBlur={handleBlur}
+                                        error={errors.endDate && touched.endDate}
+                                    />
+                                    {errors.endDate && <Typography variant="small" color="red">{errors.endDate}</Typography>}
+                                </div>
+                            </DialogBody>
+                            <DialogFooter>
+                            <Button
+                                variant="text"
+                                color="red"
+                                onClick={() => {
+                                    handleOpen(null);
+                                    resetForm();
+                                }}
+                                className="mr-1"
+                            >
+                                <span>Cancel</span>
+                            </Button>
+                            <Button
+                                onClick={handleSubmit}
+                                loading={isSubmitting}
+                            >
+                                <span>Confirm</span>
+                            </Button>
+                            </DialogFooter>
+                    </Dialog>)}
+        </Formik>
     )
 }
 

@@ -9,38 +9,15 @@ const Projects = () => {
     const [openCreateDialog, toggleCreateDialog] = useToggle(false);
     const [openUpdateDialog, toggleUpdateDialog] = useToggle(false);
     const [isDestory, setIsDestory] = useState(false);
-    const TABLE_HEAD = ["Name", "Job", "Employed", ""];
-    const TABLE_ROWS = [
-        {
-          name: "John Michael",
-          job: "Manager",
-          date: "23/04/18",
-        },
-        {
-          name: "Alexa Liras",
-          job: "Developer",
-          date: "23/04/18",
-        },
-        {
-          name: "Laurent Perrier",
-          job: "Executive",
-          date: "19/09/17",
-        },
-        {
-          name: "Michael Levi",
-          job: "Developer",
-          date: "24/12/08",
-        },
-        {
-          name: "Richard Gran",
-          job: "Manager",
-          date: "04/10/21",
-        },
-      ];
+    const [projects, setProjects] = useState([]);
+    const [page, setPage] = useState(1);
+    const [total, setTotal] = useState(0);
+    const TABLE_HEAD = ["Name", "Description", "Start Date", "End Date", ""];
     useEffect(() => {
-      fetchProjects().then((res) => {
-        if(isDestory) {
-            console.log(res)
+      fetchProjects(1).then((res) => {
+        if(!isDestory) {
+            setProjects(res.list);
+            setTotal(res.meta.total);
         }
       })
     
@@ -82,8 +59,8 @@ const Projects = () => {
                     </tr>
                     </thead>
                     <tbody>
-                    {TABLE_ROWS.map(({ name, job, date }, index) => {
-                        const isLast = index === TABLE_ROWS.length - 1;
+                    {projects.map(({ name, description, startDate, endDate }, index) => {
+                        const isLast = index === projects.length - 1;
                         const classes = isLast ? "p-4" : "p-4 border-b border-blue-gray-50";
             
                         return (
@@ -103,7 +80,7 @@ const Projects = () => {
                                 color="blue-gray"
                                 className="font-normal"
                             >
-                                {job}
+                                {description}
                             </Typography>
                             </td>
                             <td className={classes}>
@@ -112,7 +89,16 @@ const Projects = () => {
                                 color="blue-gray"
                                 className="font-normal"
                             >
-                                {date}
+                                {startDate}
+                            </Typography>
+                            </td>
+                            <td className={classes}>
+                            <Typography
+                                variant="small"
+                                color="blue-gray"
+                                className="font-normal"
+                            >
+                                {endDate}
                             </Typography>
                             </td>
                             <td className={classes}>
@@ -135,13 +121,23 @@ const Projects = () => {
             </CardBody>
             <CardFooter className="flex items-center justify-between border-t border-blue-gray-50 p-4">
                 <Typography variant="small" color="blue-gray" className="font-normal">
-                Page 1 of 10
+                Page {page} of {total}
                 </Typography>
                 <div className="flex gap-2">
-                <Button variant="outlined" size="sm">
+                <Button 
+                    variant="outlined" 
+                    size="sm" 
+                    disabled={page === 1} 
+                    onClick={() => setPage((p) => p - 5)}
+                >
                     Previous
                 </Button>
-                <Button variant="outlined" size="sm">
+                <Button 
+                    variant="outlined" 
+                    size="sm" 
+                    disabled={page + 5 > total} 
+                    onClick={() => setPage((p) => p + 5)}
+                >
                     Next
                 </Button>
                 </div>
