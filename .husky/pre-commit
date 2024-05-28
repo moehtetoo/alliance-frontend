@@ -1,4 +1,4 @@
 #!/bin/sh
 # exit 1 will prevent commit to happen, so you can more easily debug things
-echo "husky start working" && exit 1
+echo "husky start working"
 yarn run lint-staged
