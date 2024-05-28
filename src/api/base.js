@@ -3,23 +3,23 @@ import axios from 'axios';
 /**
  * Request Success Handler
  */
-const requestSuccessHandler = config => {
+const requestSuccessHandler = (config) => {
   const auth = localStorage.getItem('token');
   const headers = config.headers;
-  return {...config, headers: {...headers, auth}};
+  return { ...config, headers: { ...headers, auth } };
 };
 
 /**
  * Request Fail Handler
  */
-const requestErrorHandler = err => {
+const requestErrorHandler = (err) => {
   return Promise.reject(err);
 };
 
 /**
  * Response Success Handler
  */
-const responseSuccessHandler = res => {
+const responseSuccessHandler = (res) => {
   const response = res.data;
   if (200 <= res.status && res.status < 300) {
     return response.data;
@@ -31,7 +31,7 @@ const responseSuccessHandler = res => {
 /**
  * Response Fail handler
  */
-const responseErrorHandler = err => {
+const responseErrorHandler = (err) => {
   return Promise.reject(err);
 };
 
@@ -49,16 +49,16 @@ const request = axios.create({
  * Axios Request Middleware
  */
 request.interceptors.request.use(
-  config => requestSuccessHandler(config),
-  err => requestErrorHandler(err),
+  (config) => requestSuccessHandler(config),
+  (err) => requestErrorHandler(err)
 );
 
 /**
  * Axios Response Middleware
  */
 request.interceptors.response.use(
-  res => responseSuccessHandler(res),
-  err => responseErrorHandler(err),
+  (res) => responseSuccessHandler(res),
+  (err) => responseErrorHandler(err)
 );
 
 export default request;
